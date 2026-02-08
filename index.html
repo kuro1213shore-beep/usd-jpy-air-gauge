@@ -160,11 +160,12 @@ if (env==="RISK OFF"
     order="LONG";
 }
 
-// ===== MODE 自動切替 =====
+// ===== MODE 自動切替（壁優先） =====
 let mode = "COUNTER";
 
-if(dir !== "RANGE"){
+if (orderScore >= 2) {
     mode = "TREND";
+
 }
 
 // --- COUNTER ---
