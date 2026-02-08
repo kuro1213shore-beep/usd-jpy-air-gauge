@@ -122,10 +122,14 @@ function analyze(){
     reasons.push("RSI > 70");
   }
 
-// ORDER判定（MODE切替）
 let order = "NO TRADE";
 
-let mode = "TREND";  // "COUNTER" に変えれば逆張り
+// ===== MODE 自動切替 =====
+let mode = "COUNTER";
+
+if(dir !== "RANGE"){
+    mode = "TREND";
+}
 
 // --- COUNTER ---
 if(mode==="COUNTER"){
@@ -160,7 +164,8 @@ if(mode==="TREND"){
   document.getElementById("env").innerText = env;
   document.getElementById("dir").innerText = dir;
   document.getElementById("rsisig").innerText = rsiSignal;
-  document.getElementById("order").innerText = order + "\n" + reasons.join("\n");
+　document.getElementById("order").innerText =
+    order + " (" + mode + ")";
 }
 
 </script>
