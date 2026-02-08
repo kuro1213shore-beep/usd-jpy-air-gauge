@@ -1,67 +1,165 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FX CORE</title>
-  <style>
-    body{
-      margin:0;
-      background:#111;
-      color:#00ffcc;
-      font-family: monospace;
-      text-align:center;
-    }
-    .container{
-      padding:20px;
-    }
-    .box{
-      border:1px solid #00ffcc;
-      margin:10px;
-      padding:15px;
-      font-size:18px;
-    }
-    .button{
-      margin-top:20px;
-      padding:10px 18px;
-      background:#222;
-      color:#ff0044;
-      border:1px solid #ff0044;
-      border-radius:6px;
-      font-size:16px;
-    }
-    .sub{
-      color:#aaa;
-      font-size:12px;
-      margin-top:8px;
-    }
-  </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FX CORE</title>
+
+<style>
+body{
+  margin:0;
+  background:#111;
+  color:#00ffcc;
+  font-family:monospace;
+  text-align:center;
+}
+
+h1{
+  margin-top:40px;
+  font-size:28px;
+  letter-spacing:3px;
+}
+
+.container{
+  padding:20px;
+}
+
+.box{
+  border:2px solid #00ffcc;
+  margin:15px 0;
+  padding:20px;
+  font-size:18px;
+  transition:0.3s;
+}
+
+.green{ color:#00ffcc; border-color:#00ffcc; }
+.red{ color:#ff3b3b; border-color:#ff3b3b; }
+.blue{ color:#3ba6ff; border-color:#3ba6ff; }
+.gray{ color:#888; border-color:#555; }
+
+button{
+  margin-top:20px;
+  padding:15px 30px;
+  font-size:16px;
+  background:#111;
+  border:2px solid #ff3b3b;
+  color:#ff3b3b;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  background:#ff3b3b;
+  color:#111;
+}
+.note{
+  margin-top:20px;
+  font-size:12px;
+  color:#666;
+}
+</style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>FX CORE</h1>
 
-    <div class="box" id="env">ENV: --</div>
-    <div class="box" id="dir">DIR: --</div>
-    <div class="box" id="rsi">RSI: --</div>
-    <div class="box" id="order">ORDER: --</div>
+<h1>FX CORE</h1>
 
-    <button class="button" onclick="simulate()">SIMULATE</button>
-    <div class="sub">※今はデモ表示。次に“逆張り判定ロジック”をここに実装する</div>
+<div class="container">
+
+  <div id="env" class="box gray">ENV: --</div>
+  <div id="dir" class="box gray">DIR: --</div>
+  <div id="rsi" class="box gray">RSI: --</div>
+  <div id="order" class="box gray">ORDER: --</div>
+
+  <button onclick="simulate()">SIMULATE</button>
+
+  <div class="note">
+    ※現在は疑似相場。次にAPI接続可能。
   </div>
 
-  <script>
-    function simulate(){
-      // ここは仮。あとで本命ロジックを入れる
-      const env = ["RISK ON","RISK OFF","MIXED"][Math.floor(Math.random()*3)]
-      const dir = ["SHORT","LONG","plateau"][Math.floor(Math.random()*3)]
-      const rsi = (50 + Math.random()*40).toFixed(1)
-      const order = ["SELL WALL","BUY WALL","THIN"][Math.floor(Math.random()*3)]
+</div>
 
-      document.getElementById("env").innerHTML = "ENV: " + env
-      document.getElementById("dir").innerHTML = "DIR: " + dir
-      document.getElementById("rsi").innerHTML = "RSI: " + rsi
-      document.getElementById("order").innerHTML = "ORDER: " + order
-    }
-  </script>
+<script>
+
+function simulate(){
+
+  // 疑似マーケット生成
+  const sp = random(-2,2)
+  const vix = random(-2,2)
+  const tlt = random(-2,2)
+  const usd = random(-1,1)
+  const rsiValue = Math.floor(Math.random()*100)
+
+  const envBox = document.getElementById("env")
+  const dirBox = document.getElementById("dir")
+  const rsiBox = document.getElementById("rsi")
+  const orderBox = document.getElementById("order")
+
+  // ===== ENV 判定（リスク環境） =====
+  let envState = "MIXED"
+  envBox.className = "box gray"
+
+  if(sp > 0 && vix < 0 && tlt < 0){
+    envState = "RISK ON"
+    envBox.className = "box red"
+  }
+  else if(sp < 0 && vix > 0 && tlt > 0){
+    envState = "RISK OFF"
+    envBox.className = "box blue"
+  }
+
+  envBox.innerHTML = "ENV: " + envState
+
+  // ===== DIR 判定（ドル円方向） =====
+  let dirState = "NEUTRAL"
+  dirBox.className = "box gray"
+
+  if(usd > 0.3){
+    dirState = "LONG"
+    dirBox.className = "box red"
+  }
+  else if(usd < -0.3){
+    dirState = "SHORT"
+    dirBox.className = "box blue"
+  }
+
+  dirBox.innerHTML = "DIR: " + dirState
+
+  // ===== RSI =====
+  rsiBox.innerHTML = "RSI: " + rsiValue
+
+  if(rsiValue > 70){
+    rsiBox.className = "box red"
+  }
+  else if(rsiValue < 30){
+    rsiBox.className = "box blue"
+  }
+  else{
+    rsiBox.className = "box green"
+  }
+
+  // ===== ORDER ロジック（逆張りベース） =====
+  let order = "WAIT"
+  orderBox.className = "box gray"
+
+  if(envState === "RISK ON" && rsiValue < 30){
+    order = "LONG"
+    orderBox.className = "box red"
+  }
+  else if(envState === "RISK OFF" && rsiValue > 70){
+    order = "SHORT"
+    orderBox.className = "box blue"
+  }
+
+  orderBox.innerHTML = "ORDER: " + order
+}
+
+
+// ===== Utility =====
+function random(min,max){
+  return Math.random()*(max-min)+min
+}
+
+</script>
+
 </body>
 </html>
