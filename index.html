@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FX CORE</title>
+  <style>
+    body{
+      margin:0;
+      background:#111;
+      color:#00ffcc;
+      font-family: monospace;
+      text-align:center;
+    }
+    .container{
+      padding:20px;
+    }
+    .box{
+      border:1px solid #00ffcc;
+      margin:10px;
+      padding:15px;
+      font-size:18px;
+    }
+    .button{
+      margin-top:20px;
+      padding:10px 18px;
+      background:#222;
+      color:#ff0044;
+      border:1px solid #ff0044;
+      border-radius:6px;
+      font-size:16px;
+    }
+    .sub{
+      color:#aaa;
+      font-size:12px;
+      margin-top:8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FX CORE</h1>
+
+    <div class="box" id="env">ENV: --</div>
+    <div class="box" id="dir">DIR: --</div>
+    <div class="box" id="rsi">RSI: --</div>
+    <div class="box" id="order">ORDER: --</div>
+
+    <button class="button" onclick="simulate()">SIMULATE</button>
+    <div class="sub">※今はデモ表示。次に“逆張り判定ロジック”をここに実装する</div>
+  </div>
+
+  <script>
+    function simulate(){
+      // ここは仮。あとで本命ロジックを入れる
+      const env = ["RISK ON","RISK OFF","MIXED"][Math.floor(Math.random()*3)]
+      const dir = ["SHORT","LONG","plateau"][Math.floor(Math.random()*3)]
+      const rsi = (50 + Math.random()*40).toFixed(1)
+      const order = ["SELL WALL","BUY WALL","THIN"][Math.floor(Math.random()*3)]
+
+      document.getElementById("env").innerHTML = "ENV: " + env
+      document.getElementById("dir").innerHTML = "DIR: " + dir
+      document.getElementById("rsi").innerHTML = "RSI: " + rsi
+      document.getElementById("order").innerHTML = "ORDER: " + order
+    }
+  </script>
+</body>
+</html>
