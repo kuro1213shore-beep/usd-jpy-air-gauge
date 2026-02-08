@@ -125,6 +125,38 @@ function analyze(){
     rsiSignal = "OVERBOUGHT";
     reasons.push("RSI > 70");
   }
+  
+　　// ===== ORDER WALL SCORE =====
+　　let orderScore = 0;
+　　let orderBias = "NEUTRAL";
+
+　　if (buy > sell) {
+    orderScore = 1;
+    orderBias = "BUY DOMINANT";
+　　}
+
+　　if (sell > buy) {
+    orderScore = 1;
+    orderBias = "SELL DOMINANT";
+　　}
+
+　　if (buy >= sell * 1.5) {
+    orderScore = 2;
+　　}
+
+　　if (buy >= sell * 2) {
+    orderScore = 3;
+　　}
+
+　　if (sell >= buy * 1.5) {
+    orderScore = 2;
+　　}
+
+　　if (sell >= buy * 2) {
+    orderScore = 3;
+　　}
+
+reasons.push("OrderScore: " + orderScore);
 
 let order = "NO TRADE";
 
