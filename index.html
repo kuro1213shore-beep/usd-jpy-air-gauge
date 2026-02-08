@@ -87,30 +87,56 @@ function analyze(){
   let dxy = parseFloat(document.getElementById("dxy").value);
   let rsi = parseFloat(document.getElementById("rsi").value);
 
+  let reasons = [];
+
   // ENV判定
   let env = "NEUTRAL";
-  if(sp > 0 && vix < 0) env = "RISK ON";
-  if(sp < 0 && vix > 0) env = "RISK OFF";
+  if(sp > 0 && vix < 0){
+    env = "RISK ON";
+    reasons.push("SP↑ & VIX↓");
+  }
+  if(sp < 0 && vix > 0){
+    env = "RISK OFF";
+    reasons.push("SP↓ & VIX↑");
+  }
 
   // DIR判定
   let dir = "RANGE";
-  if(dxy > 0 && tlt < 0) dir = "USD STRONG";
-  if(dxy < 0 && tlt > 0) dir = "USD WEAK";
+  if(dxy > 0 && tlt < 0){
+    dir = "USD STRONG";
+    reasons.push("DXY↑ & TLT↓");
+  }
+  if(dxy < 0 && tlt > 0){
+    dir = "USD WEAK";
+    reasons.push("DXY↓ & TLT↑");
+  }
 
   // RSI判定
   let rsiSignal = "NORMAL";
-  if(rsi < 30) rsiSignal = "OVERSOLD";
-  if(rsi > 70) rsiSignal = "OVERBOUGHT";
+  if(rsi < 30){
+    rsiSignal = "OVERSOLD";
+    reasons.push("RSI < 30");
+  }
+  if(rsi > 70){
+    rsiSignal = "OVERBOUGHT";
+    reasons.push("RSI > 70");
+  }
 
   // ORDER判定
   let order = "NO TRADE";
-  if(env=="RISK ON" && rsiSignal=="OVERSOLD") order="LONG";
-  if(env=="RISK OFF" && rsiSignal=="OVERBOUGHT") order="SHORT";
+  if(env=="RISK ON" && rsiSignal=="OVERSOLD"){
+    order="LONG";
+    reasons.push("RiskOn + Oversold");
+  }
+  if(env=="RISK OFF" && rsiSignal=="OVERBOUGHT"){
+    order="SHORT";
+    reasons.push("RiskOff + Overbought");
+  }
 
   document.getElementById("env").innerText = env;
   document.getElementById("dir").innerText = dir;
   document.getElementById("rsisig").innerText = rsiSignal;
-  document.getElementById("order").innerText = order;
+  document.getElementById("order").innerText = order + "\n" + reasons.join("\n");
 }
 
 </script>
