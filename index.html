@@ -1,162 +1,116 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FX CORE</title>
 
 <style>
 body{
   margin:0;
   background:#111;
-  color:#00ffcc;
+  color:#00ffc3;
   font-family:monospace;
   text-align:center;
 }
-
-h1{
-  margin-top:40px;
-  font-size:28px;
-  letter-spacing:3px;
-}
-
 .container{
   padding:20px;
 }
-
-.box{
-  border:2px solid #00ffcc;
-  margin:15px 0;
-  padding:20px;
-  font-size:18px;
-  transition:0.3s;
+h1{
+  margin-top:10px;
 }
-
-.green{ color:#00ffcc; border-color:#00ffcc; }
-.red{ color:#ff3b3b; border-color:#ff3b3b; }
-.blue{ color:#3ba6ff; border-color:#3ba6ff; }
-.gray{ color:#888; border-color:#555; }
-
+.box{
+  border:2px solid #00ffc3;
+  padding:15px;
+  margin:15px 0;
+}
+input{
+  width:80px;
+  padding:5px;
+  background:#000;
+  border:1px solid #00ffc3;
+  color:#00ffc3;
+  text-align:center;
+}
 button{
   margin-top:20px;
-  padding:15px 30px;
-  font-size:16px;
+  padding:12px 25px;
   background:#111;
-  border:2px solid #ff3b3b;
-  color:#ff3b3b;
-  cursor:pointer;
-  transition:0.3s;
+  border:2px solid #ff004c;
+  color:#ff004c;
+  font-size:16px;
 }
-
 button:hover{
-  background:#ff3b3b;
+  background:#ff004c;
   color:#111;
 }
-.note{
-  margin-top:20px;
+.small{
   font-size:12px;
-  color:#666;
+  margin-top:20px;
+  color:#888;
 }
 </style>
 </head>
 
 <body>
+<div class="container">
 
 <h1>FX CORE</h1>
 
-<div class="container">
+<div class="box">
+SP500 % <input id="sp" type="number" step="0.1"><br><br>
+VIX % <input id="vix" type="number" step="0.1"><br><br>
+TLT % <input id="tlt" type="number" step="0.1"><br><br>
+USD INDEX % <input id="dxy" type="number" step="0.1"><br><br>
+RSI <input id="rsi" type="number">
+</div>
 
-  <div id="env" class="box gray">ENV: --</div>
-  <div id="dir" class="box gray">DIR: --</div>
-  <div id="rsi" class="box gray">RSI: --</div>
-  <div id="order" class="box gray">ORDER: --</div>
+<div class="box">ENV: <span id="env">--</span></div>
+<div class="box">DIR: <span id="dir">--</span></div>
+<div class="box">RSI SIGNAL: <span id="rsisig">--</span></div>
+<div class="box">ORDER: <span id="order">--</span></div>
 
-  <button onclick="simulate()">SIMULATE</button>
+<button onclick="analyze()">ANALYZE</button>
 
-  <div class="note">
-    ※現在は疑似相場。次にAPI接続可能。
-  </div>
+<div class="small">
+※ 数値を入力して相場状態を再現
+</div>
 
 </div>
 
 <script>
 
-function simulate(){
+function analyze(){
 
-  // 疑似マーケット生成
-  const sp = random(-2,2)
-  const vix = random(-2,2)
-  const tlt = random(-2,2)
-  const usd = random(-1,1)
-  const rsiValue = Math.floor(Math.random()*100)
+  let sp = parseFloat(document.getElementById("sp").value);
+  let vix = parseFloat(document.getElementById("vix").value);
+  let tlt = parseFloat(document.getElementById("tlt").value);
+  let dxy = parseFloat(document.getElementById("dxy").value);
+  let rsi = parseFloat(document.getElementById("rsi").value);
 
-  const envBox = document.getElementById("env")
-  const dirBox = document.getElementById("dir")
-  const rsiBox = document.getElementById("rsi")
-  const orderBox = document.getElementById("order")
+  // ENV判定
+  let env = "NEUTRAL";
+  if(sp > 0 && vix < 0) env = "RISK ON";
+  if(sp < 0 && vix > 0) env = "RISK OFF";
 
-  // ===== ENV 判定（リスク環境） =====
-  let envState = "MIXED"
-  envBox.className = "box gray"
+  // DIR判定
+  let dir = "RANGE";
+  if(dxy > 0 && tlt < 0) dir = "USD STRONG";
+  if(dxy < 0 && tlt > 0) dir = "USD WEAK";
 
-  if(sp > 0 && vix < 0 && tlt < 0){
-    envState = "RISK ON"
-    envBox.className = "box red"
-  }
-  else if(sp < 0 && vix > 0 && tlt > 0){
-    envState = "RISK OFF"
-    envBox.className = "box blue"
-  }
+  // RSI判定
+  let rsiSignal = "NORMAL";
+  if(rsi < 30) rsiSignal = "OVERSOLD";
+  if(rsi > 70) rsiSignal = "OVERBOUGHT";
 
-  envBox.innerHTML = "ENV: " + envState
+  // ORDER判定
+  let order = "NO TRADE";
+  if(env=="RISK ON" && rsiSignal=="OVERSOLD") order="LONG";
+  if(env=="RISK OFF" && rsiSignal=="OVERBOUGHT") order="SHORT";
 
-  // ===== DIR 判定（ドル円方向） =====
-  let dirState = "NEUTRAL"
-  dirBox.className = "box gray"
-
-  if(usd > 0.3){
-    dirState = "LONG"
-    dirBox.className = "box red"
-  }
-  else if(usd < -0.3){
-    dirState = "SHORT"
-    dirBox.className = "box blue"
-  }
-
-  dirBox.innerHTML = "DIR: " + dirState
-
-  // ===== RSI =====
-  rsiBox.innerHTML = "RSI: " + rsiValue
-
-  if(rsiValue > 70){
-    rsiBox.className = "box red"
-  }
-  else if(rsiValue < 30){
-    rsiBox.className = "box blue"
-  }
-  else{
-    rsiBox.className = "box green"
-  }
-
-  // ===== ORDER ロジック（逆張りベース） =====
-  let order = "WAIT"
-  orderBox.className = "box gray"
-
-  if(envState === "RISK ON" && rsiValue < 30){
-    order = "LONG"
-    orderBox.className = "box red"
-  }
-  else if(envState === "RISK OFF" && rsiValue > 70){
-    order = "SHORT"
-    orderBox.className = "box blue"
-  }
-
-  orderBox.innerHTML = "ORDER: " + order
-}
-
-
-// ===== Utility =====
-function random(min,max){
-  return Math.random()*(max-min)+min
+  document.getElementById("env").innerText = env;
+  document.getElementById("dir").innerText = dir;
+  document.getElementById("rsisig").innerText = rsiSignal;
+  document.getElementById("order").innerText = order;
 }
 
 </script>
