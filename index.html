@@ -122,16 +122,22 @@ function analyze(){
     reasons.push("RSI > 70");
   }
 
-  // ORDER判定
-  let order = "NO TRADE";
-  if(env=="RISK ON" && rsiSignal=="OVERSOLD"){
+// ORDER判定（DIR込み）
+let order = "NO TRADE";
+
+if(env==="RISK ON" 
+   && rsiSignal==="OVERSOLD" 
+   && dir==="USD STRONG"){
     order="LONG";
-    reasons.push("RiskOn + Oversold");
-  }
-  if(env=="RISK OFF" && rsiSignal=="OVERBOUGHT"){
+    reasons.push("RiskOn + Oversold + USD Strong");
+}
+
+if(env==="RISK OFF" 
+   && rsiSignal==="OVERBOUGHT" 
+   && dir==="USD WEAK"){
     order="SHORT";
-    reasons.push("RiskOff + Overbought");
-  }
+    reasons.push("RiskOff + Overbought + USD Weak");
+}
 
   document.getElementById("env").innerText = env;
   document.getElementById("dir").innerText = dir;
