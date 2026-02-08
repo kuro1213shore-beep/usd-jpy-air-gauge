@@ -127,38 +127,38 @@ function analyze(){
   }
   
 　　// ===== ORDER WALL SCORE =====
-　　let orderScore = 0;
-　　let orderBias = "NEUTRAL";
+if (buy >= sell * 2) {
+  orderScore = 3;
+  orderBias = "BUY DOMINANT";
+} else if (buy >= sell * 1.5) {
+  orderScore = 2;
+  orderBias = "BUY DOMINANT";
+} else if (sell >= buy * 2) {
+  orderScore = 3;
+  orderBias = "SELL DOMINANT";
+} else if (sell >= buy * 1.5) {
+  orderScore = 2;
+  orderBias = "SELL DOMINANT";
+} else if (buy > sell) {
+  orderScore = 1;
+  orderBias = "BUY DOMINANT";
+} else if (sell > buy) {
+  orderScore = 1;
+  orderBias = "SELL DOMINANT";
+}
+if (env==="RISK OFF"
+    && rsiSignal==="OVERSOLD"
+    && orderScore >= 2) {
 
-　　if (buy > sell) {
-    orderScore = 1;
-    orderBias = "BUY DOMINANT";
-　　}
+    order="LONG";
 
-　　if (sell > buy) {
-    orderScore = 1;
-    orderBias = "SELL DOMINANT";
-　　}
+} else if (env==="RISK ON"
+    && dir==="USD STRONG"
+    && rsiSignal==="NORMAL"
+    && orderScore >= 2) {
 
-　　if (buy >= sell * 1.5) {
-    orderScore = 2;
-　　}
-
-　　if (buy >= sell * 2) {
-    orderScore = 3;
-　　}
-
-　　if (sell >= buy * 1.5) {
-    orderScore = 2;
-　　}
-
-　　if (sell >= buy * 2) {
-    orderScore = 3;
-　　}
-
-reasons.push("OrderScore: " + orderScore);
-
-let order = "NO TRADE";
+    order="LONG";
+}
 
 // ===== MODE 自動切替 =====
 let mode = "COUNTER";
