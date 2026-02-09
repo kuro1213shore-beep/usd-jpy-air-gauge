@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FX CORE</title>
+<title>FX CORE AUTO</title>
 
 <style>
 body{
@@ -12,15 +12,19 @@ body{
   font-family:monospace;
   text-align:center;
 }
-.container{ padding:20px; }
-h1{ margin-top:10px; }
+.container{
+  padding:20px;
+}
+h1{
+  margin-top:10px;
+}
 .box{
   border:2px solid #00ffc3;
   padding:15px;
   margin:15px 0;
 }
 input{
-  width:80px;
+  width:90px;
   padding:5px;
   background:#000;
   border:1px solid #00ffc3;
@@ -50,15 +54,10 @@ button:hover{
 <body>
 <div class="container">
 
-<h1>FX CORE</h1>
+<h1>FX CORE AUTO</h1>
 
 <div class="box">
-SP500 % <input id="sp" type="number" step="0.1"><br><br>
-VIX % <input id="vix" type="number" step="0.1"><br><br>
-TLT % <input id="tlt" type="number" step="0.1"><br><br>
-USD INDEX % <input id="dxy" type="number" step="0.1"><br><br>
-RSI <input id="rsi" type="number"><br><br>
-BUY SIZE <input id="buy" type="number"><br><br>
+BUY SIZE <input id="buy" type="number">
 SELL SIZE <input id="sell" type="number">
 </div>
 
@@ -67,108 +66,130 @@ SELL SIZE <input id="sell" type="number">
 <div class="box">RSI SIGNAL: <span id="rsisig">--</span></div>
 <div class="box">ORDER: <span id="order">--</span></div>
 
-<button onclick="analyze()">ANALYZE</button>
+<button onclick="analyze()">AUTO ANALYZE</button>
 
-<div class="small">※ 数値を入力して相場状態を再現</div>
+<div class="small">
+※ 市場データ自動取得 / 壁は手入力
+</div>
 
 </div>
 
 <script>
 
-function analyze(){
+// ===== Yahoo取得 =====
+async function fetchYahoo(symbol){
+  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return data.quoteResponse.result[0];
+}
 
-  let sp = parseFloat(document.getElementById("sp").value) || 0;
-  let vix = parseFloat(document.getElementById("vix").value) || 0;
-  let tlt = parseFloat(document.getElementById("tlt").value) || 0;
-  let dxy = parseFloat(document.getElementById("dxy").value) || 0;
-  let rsi = parseFloat(document.getElementById("rsi").value) || 50;
+// ===== 簡易RSI計算 =====
+async function calculateRSI(symbol, period=14){
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1mo&interval=1d`;
+  const response = await fetch(url);
+  const data = await response.json();
+  const closes = data.chart.result[0].indicators.quote[0].close;
+
+  let gains = 0;
+  let losses = 0;
+
+  for(let i=closes.length-period; i<closes.length; i++){
+    let diff = closes[i] - closes[i-1];
+    if(diff > 0) gains += diff;
+    if(diff < 0) losses += Math.abs(diff);
+  }
+
+  let avgGain = gains / period;
+  let avgLoss = losses / period;
+
+  if(avgLoss === 0) return 100;
+
+  let rs = avgGain / avgLoss;
+  return 100 - (100 / (1 + rs));
+}
+
+// ===== 分析 =====
+async function analyze(){
+
   let buy = parseFloat(document.getElementById("buy").value) || 0;
   let sell = parseFloat(document.getElementById("sell").value) || 0;
 
-  let reasons = [];
-  let order = "NO TRADE";
+  let spData  = await fetchYahoo("^GSPC");
+  let vixData = await fetchYahoo("^VIX");
+  let tltData = await fetchYahoo("TLT");
+  let dxyData = await fetchYahoo("DX-Y.NYB");
+
+  let sp  = spData.regularMarketChangePercent;
+  let vix = vixData.regularMarketChangePercent;
+  let tlt = tltData.regularMarketChangePercent;
+  let dxy = dxyData.regularMarketChangePercent;
+
+  let rsi = await calculateRSI("^GSPC");
 
   // ===== ENV =====
   let env = "NEUTRAL";
-  if(sp > 0 && vix < 0){
-    env = "RISK ON";
-  }
-  if(sp < 0 && vix > 0){
-    env = "RISK OFF";
-  }
+  if(sp > 0 && vix < 0) env = "RISK ON";
+  if(sp < 0 && vix > 0) env = "RISK OFF";
 
   // ===== DIR =====
   let dir = "RANGE";
-  if(dxy > 0 && tlt < 0){
-    dir = "USD STRONG";
-  }
-  if(dxy < 0 && tlt > 0){
-    dir = "USD WEAK";
-  }
+  if(dxy > 0 && tlt < 0) dir = "USD STRONG";
+  if(dxy < 0 && tlt > 0) dir = "USD WEAK";
 
-  // ===== RSI =====
+  // ===== RSI判定 =====
   let rsiSignal = "NORMAL";
   if(rsi < 30) rsiSignal = "OVERSOLD";
   if(rsi > 70) rsiSignal = "OVERBOUGHT";
 
-  // ===== ORDER WALL SCORE =====
+  // ===== ORDER SCORE =====
   let orderScore = 0;
-  let orderBias = "NEUTRAL";
+  let orderBias = "BALANCE";
 
-  if (buy >= sell * 2) {
+  if(buy >= sell * 2){
     orderScore = 3;
     orderBias = "BUY DOMINANT";
-  } else if (buy >= sell * 1.5) {
-    orderScore = 2;
-    orderBias = "BUY DOMINANT";
-  } else if (sell >= buy * 2) {
+  } else if(sell >= buy * 2){
     orderScore = 3;
     orderBias = "SELL DOMINANT";
-  } else if (sell >= buy * 1.5) {
-    orderScore = 2;
-    orderBias = "SELL DOMINANT";
-  } else if (buy > sell) {
+  } else if(buy > sell){
     orderScore = 1;
     orderBias = "BUY DOMINANT";
-  } else if (sell > buy) {
+  } else if(sell > buy){
     orderScore = 1;
     orderBias = "SELL DOMINANT";
   }
 
-  // ===== MODE 自動切替（壁優先） =====
+  // ===== MODE =====
   let mode = "COUNTER";
-  if(orderScore >= 2){
-    mode = "TREND";
+  if(orderScore >= 2) mode = "TREND";
+
+  let order = "NO TRADE";
+
+  if(mode === "COUNTER"){
+    if(env === "RISK OFF" && rsiSignal === "OVERSOLD"){
+      order = "LONG";
+    }
+    if(env === "RISK ON" && rsiSignal === "OVERBOUGHT"){
+      order = "SHORT";
+    }
   }
 
-  // ===== COUNTER =====
-  if(mode==="COUNTER"){
-    if(env==="RISK OFF" && rsiSignal==="OVERSOLD"){
-      order="LONG";
+  if(mode === "TREND"){
+    if(env === "RISK ON" && dir === "USD STRONG"){
+      order = "LONG";
     }
-    if(env==="RISK ON" && rsiSignal==="OVERBOUGHT"){
-      order="SHORT";
-    }
-  }
-
-  // ===== TREND =====
-  if(mode==="TREND"){
-    if(env==="RISK ON" && dir==="USD STRONG" && rsiSignal==="NORMAL"){
-      order="LONG";
-    }
-    if(env==="RISK OFF" && dir==="USD WEAK" && rsiSignal==="NORMAL"){
-      order="SHORT";
+    if(env === "RISK OFF" && dir === "USD WEAK"){
+      order = "SHORT";
     }
   }
 
   document.getElementById("env").innerText = env;
   document.getElementById("dir").innerText = dir;
   document.getElementById("rsisig").innerText = rsiSignal;
-  document.getElementById("order").innerText =
-    order + " (" + mode + " / Score:" + orderScore + ")";
+  document.getElementById("order").innerText = order + " (" + mode + ")";
 }
 
 </script>
-
 </body>
 </html>
